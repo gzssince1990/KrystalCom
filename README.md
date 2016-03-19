@@ -1,5 +1,5 @@
 # KrystalCom
-Spring MVC online store project
+Spring MVC inventory management system project
 
 ##Author
 Zhisong Ge<br>
