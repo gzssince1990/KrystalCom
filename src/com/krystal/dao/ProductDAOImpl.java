@@ -1,12 +1,15 @@
 package com.krystal.dao;
 
 import com.krystal.model.Product;
+import com.mysql.jdbc.Statement;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -22,7 +25,7 @@ public class ProductDAOImpl implements ProductDAO {
         jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    public void saveOrUpdate(Product product) {
+    public int saveOrUpdate(final Product product) {
         if (product.getProduct_id() > 0){
             //update
             String sql = "UPDATE product set brand=?, name=?, " +
@@ -32,14 +35,34 @@ public class ProductDAOImpl implements ProductDAO {
                     product.getColor(), product.getSize(), product.getDescription(),
                     product.getCost_usd(), product.getCost_chy(),
                     product.getPrice_chy(), product.getProduct_id());
+            return product.getProduct_id();
         } else {
             //insert
-            String sql = "INSERT INTO product (brand, name, color, size, description, " +
+            final String sql = "INSERT INTO product (brand, name, color, size, description, " +
                     "cost_usd, cost_chy, price_chy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            jdbcTemplate.update(sql, product.getBrand(), product.getName(),
-                    product.getColor(), product.getSize(), product.getDescription(),
-                    product.getCost_usd(), product.getCost_chy(),
-                    product.getPrice_chy());
+//            jdbcTemplate.update(sql, product.getBrand(), product.getName(),
+//                    product.getColor(), product.getSize(), product.getDescription(),
+//                    product.getCost_usd(), product.getCost_chy(),
+//                    product.getPrice_chy());
+
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+
+            jdbcTemplate.update(new PreparedStatementCreator() {
+                public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+                    PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                    preparedStatement.setString(1, product.getBrand());
+                    preparedStatement.setString(2, product.getName());
+                    preparedStatement.setString(3, product.getColor());
+                    preparedStatement.setString(4, product.getSize());
+                    preparedStatement.setString(5, product.getDescription());
+                    preparedStatement.setFloat(6, product.getCost_usd());
+                    preparedStatement.setFloat(7, product.getCost_chy());
+                    preparedStatement.setInt(8, product.getProduct_id());
+                    return preparedStatement;
+                }
+            }, keyHolder);
+
+            return keyHolder.getKey().intValue();
         }
     }
 

@@ -36,7 +36,6 @@ public class ProductController {
         for (Product product: productList){
             List<Image> imageList = imageDAO.getImages(product.getProduct_id());
             if (!imageList.isEmpty()){
-
                 product.setImageStr(getEncodedString(imageList.get(0).getImage_id()));
             }else {
                 product.setImageStr(null);
@@ -89,16 +88,15 @@ public class ProductController {
             return model;
         }
 
-        Image img = new Image();
+        int product_id = productDAO.saveOrUpdate(product);
 
+        Image img = new Image();
         if (!image.isEmpty()){
-            img.setProduct_id(product.getProduct_id());
+            img.setProduct_id(product_id);
             img.setImage_name(image.getOriginalFilename());
             img.setImage_content(image.getBytes());
             imageDAO.save(img);
         }
-
-        productDAO.saveOrUpdate(product);
         return new ModelAndView("redirect:/product");
     }
 
